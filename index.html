@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생일 문제 · 9주차 시뮬레이터</title>
+<style>
+  :root{
+    --ink:#1d2b4a; --ink-soft:#48597e; --paper:#fbfcff; --grid:#dfe7f5; --line:#c6d2e8;
+    --accent:#ff7a4d; --accent-deep:#c2410c; --answer:#1f9d76; --answer-bg:#e7f6ef;
+    --highlight:#fff2a8; --me:#6b7fd7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    color:var(--ink); line-height:1.7;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/26px 26px,
+      var(--paper);
+  }
+  .wrap{max-width:780px;margin:0 auto;padding:32px 16px 80px;}
+  header{border:2px solid var(--ink);background:#fff;border-radius:14px;padding:24px 26px;box-shadow:6px 6px 0 var(--ink);margin-bottom:30px;}
+  .eyebrow{display:inline-block;font-size:.74rem;letter-spacing:.22em;font-weight:800;color:var(--accent-deep);border:1.5px solid var(--accent);border-radius:999px;padding:3px 12px;margin-bottom:12px;}
+  header h1{margin:0;font-size:1.9rem;font-weight:900;}
+  header p{margin:10px 0 0;color:var(--ink-soft);font-size:.95rem;}
+  .card{background:#fff;border:1.8px solid var(--line);border-radius:14px;padding:22px 22px;margin-bottom:24px;box-shadow:0 4px 16px rgba(29,43,74,.05);}
+  .qhead{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;}
+  .qnum{flex:none;font-weight:900;font-size:.9rem;background:var(--ink);color:#fff;border-radius:8px;padding:4px 11px;}
+  .qtitle{font-weight:800;font-size:1.05rem;}
+  .qbody{color:var(--ink-soft);font-size:.95rem;margin:0 0 8px;}
+  .ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0;}
+  .ctrl label{font-weight:800;font-size:.93rem;}
+  input[type=range]{flex:1;min-width:160px;accent-color:var(--accent-deep);}
+  .nval{font-weight:900;font-size:1.3rem;min-width:3.2em;text-align:right;}
+  select,textarea{font-family:inherit;font-size:.93rem;border:1.6px solid var(--line);border-radius:8px;padding:6px 8px;color:var(--ink);background:#fff;}
+  textarea{width:100%;min-height:90px;}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  button.b{font-family:inherit;font-size:.92rem;font-weight:800;color:var(--ink);background:#fff;border:1.8px solid var(--ink);border-radius:10px;padding:8px 15px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);}
+  button.b:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink);}
+  button.b.go{background:#c2410c;color:#fff;border-color:#9a3412;box-shadow:3px 3px 0 #9a3412;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .stat{border:1.6px solid var(--line);border-radius:10px;padding:10px 12px;background:#fbfcff;}
+  .stat .k{font-size:.78rem;color:var(--ink-soft);font-weight:700;}
+  .stat .v{font-size:1.35rem;font-weight:900;}
+  .stat.theory .v{color:var(--accent-deep);}
+  .stat.exp .v{color:var(--answer);}
+  .msg{font-weight:800;margin:12px 0 4px;min-height:1.6em;}
+  .msg.hit{color:var(--answer);} .msg.miss{color:var(--accent-deep);}
+  /* 달력 */
+  .cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:10px;}
+  .mon{border:1.4px solid var(--line);border-radius:8px;padding:6px;}
+  .mon h4{margin:0 0 4px;font-size:.82rem;}
+  .days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .d{font-size:.62rem;text-align:center;border-radius:3px;background:#f3f6fb;color:#5f6c88;line-height:1.7;}
+  .d.one{background:#dbe3ff;color:var(--ink);font-weight:800;}
+  .d.dup{background:#c2410c;color:#fff;font-weight:900;}
+  .list{font-size:.88rem;color:var(--ink-soft);margin-top:8px;}
+  canvas{width:100%;height:auto;border:1.4px solid var(--line);border-radius:10px;background:#fff;display:block;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.84rem;margin-top:8px;color:var(--ink-soft);}
+  .legend i{display:inline-block;width:18px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px;}
+  table.t{border-collapse:collapse;width:100%;font-size:.9rem;margin-top:8px;}
+  table.t th,table.t td{border:1px solid var(--line);padding:4px 6px;text-align:center;}
+  table.t th{background:#f1f4fa;}
+  table.t tr.mark td{background:var(--highlight);font-weight:800;}
+  .reveal-btn{font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);background:var(--highlight);border:1.6px dashed var(--ink);border-radius:9px;padding:7px 14px;cursor:pointer;margin-top:8px;}
+  .reveal{display:none;margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--answer-bg);border:1.4px solid var(--answer);font-size:.93rem;}
+  .reveal.open{display:block;}
+  footer{text-align:center;color:var(--ink-soft);font-size:.85rem;margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">수퍼맨 · 9주차</span>
+  <h1>23명이면 반반?</h1>
+  <p>생일이 같은 두 사람이 있을 확률이 50%를 넘으려면 몇 명이 필요할까? 직접 반을 만들어 보고, 수천 번 반복해서 이론값과 비교해 보자.<br>
+  전제: 1년 365일(2/29 제외), 모든 날짜는 똑같이 나올 수 있음, 쌍둥이 없음.</p>
+</header>
+
+<!-- 1. 한 반 만들기 -->
+<section class="card">
+  <div class="qhead"><span class="qnum">실험 1</span><span class="qtitle">무작위로 한 반 만들기</span></div>
+  <p class="qbody">인원을 정하고 「반 만들기」를 누르면 생일이 무작위로 정해진다. 같은 날짜는 <b style="color:var(--accent-deep)">주황색</b>으로 표시된다.</p>
+  <div class="ctrl">
+    <label for="n1">인원</label>
+    <input type="range" id="n1" min="2" max="100" value="23">
+    <span class="nval" id="n1v">23명</span>
+  </div>
+  <div class="btnrow">
+    <button class="b go" id="btnClass">🎂 반 만들기</button>
+    <button class="b" id="btnClass10">10반 연속</button>
+  </div>
+  <div class="msg" id="classMsg"></div>
+  <div class="list" id="classList"></div>
+  <div class="cal" id="cal"></div>
+</section>
+
+<!-- 2. 반복 실험 -->
+<section class="card">
+  <div class="qhead"><span class="qnum">실험 2</span><span class="qtitle">반복 실험 — 이론값과 만나는 곳</span></div>
+  <p class="qbody">같은 인원의 반을 여러 번 만들어, 같은 생일 쌍이 나온 반의 비율을 센다. 반복 횟수가 커질수록 어떤 값에 가까워지는지 보자.</p>
+  <div class="ctrl">
+    <label for="n2">인원</label>
+    <input type="range" id="n2" min="2" max="100" value="23">
+    <span class="nval" id="n2v">23명</span>
+  </div>
+  <div class="ctrl">
+    <label for="reps">반복</label>
+    <select id="reps">
+      <option value="10">10회</option>
+      <option value="100">100회</option>
+      <option value="1000" selected>1,000회</option>
+      <option value="10000">10,000회</option>
+      <option value="100000">100,000회</option>
+    </select>
+    <button class="b go" id="btnRun">▶ 실행</button>
+    <button class="b" id="btnReset">초기화</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="k">누적 반 수</div><div class="v" id="sTotal">0</div></div>
+    <div class="stat"><div class="k">같은 생일 쌍이 나온 반</div><div class="v" id="sHit">0</div></div>
+    <div class="stat exp"><div class="k">실험값</div><div class="v" id="sExp">–</div></div>
+    <div class="stat theory"><div class="k">이론값</div><div class="v" id="sTh">–</div></div>
+  </div>
+  <canvas id="conv" width="740" height="240" style="margin-top:14px"></canvas>
+  <div class="legend"><span><i style="background:var(--answer)"></i>실험값(누적)</span><span><i style="background:var(--accent-deep)"></i>이론값</span></div>
+</section>
+
+<!-- 3. 그래프 -->
+<section class="card">
+  <div class="qhead"><span class="qnum">그래프</span><span class="qtitle">인원에 따른 확률 — "아무나 둘" vs "나와 같은 생일"</span></div>
+  <p class="qbody">두 곡선은 같은 생일 문제처럼 보이지만 전혀 다른 질문이다. 50% 선을 넘는 지점을 비교해 보자. 그래프 위에 마우스(손가락)를 대면 값이 나온다.</p>
+  <canvas id="curve" width="740" height="300"></canvas>
+  <div class="legend">
+    <span><i style="background:var(--accent-deep)"></i>아무나 둘이 같은 생일: 1 − 365·364·⋯ / 365ⁿ</span>
+    <span><i style="background:var(--me)"></i>나와 같은 생일: 1 − (364/365)ⁿ⁻¹</span>
+  </div>
+  <div class="msg" id="curveMsg">　</div>
+  <button class="reveal-btn" onclick="toggle(this)">왜 이렇게 차이가 날까? (풀이 보기)</button>
+  <div class="reveal">23명이면 두 사람씩 짝 짓는 방법이 <b>₂₃C₂ = 253가지</b>다. 짝 하나가 같을 확률은 1/365로 작지만, 짝이 많으니 그중 하나라도 같을 기회가 많다.
+  반면 "나와 같은 생일"은 나와 다른 사람을 비교하는 것뿐이라, 22명이면 비교가 22번밖에 안 된다. 50%를 넘으려면 나를 빼고 253명, 즉 <b>254명</b>이 필요하다.</div>
+</section>
+
+<!-- 4. 이론값 표 -->
+<section class="card">
+  <div class="qhead"><span class="qnum">표</span><span class="qtitle">이론값 표 (학습지 2-2 확인용)</span></div>
+  <button class="reveal-btn" onclick="toggle(this)">표 펼치기</button>
+  <div class="reveal" style="background:#fff;border-color:var(--line)"><table class="t" id="thTable"></table></div>
+</section>
+
+<!-- 5. 우리 반 -->
+<section class="card">
+  <div class="qhead"><span class="qnum">실험 3</span><span class="qtitle">우리 반 생일 넣기</span></div>
+  <p class="qbody">생일을 <b>월-일</b> 또는 <b>월/일</b> 꼴로 쉼표·띄어쓰기·줄바꿈으로 나누어 넣는다. 예) <code>3-14, 7/2, 12-25</code><br>
+  이름은 넣지 않는다. 입력한 내용은 이 화면에서만 계산하고 어디에도 저장·전송하지 않는다.</p>
+  <textarea id="ours" placeholder="3-14, 7-2, 12-25, ..."></textarea>
+  <div class="btnrow"><button class="b go" id="btnOurs">확인하기</button></div>
+  <div class="msg" id="oursMsg"></div>
+  <div class="list" id="oursList"></div>
+  <div class="cal" id="calOurs"></div>
+</section>
+
+<footer>수퍼맨 동아리 — 수학과 프로그래밍으로 세상을 연결하다.</footer>
+</div>
+
+<script>
+const MD=[31,28,31,30,31,30,31,31,30,31,30,31];
+const $=id=>document.getElementById(id);
+function toggle(b){const r=b.nextElementSibling;r.classList.toggle('open');}
+
+// 이론값
+function pAny(n){let q=1;for(let i=0;i<n;i++)q*=(365-i)/365;return 1-q;}
+function pMe(n){return 1-Math.pow(364/365,n-1);}
+const pct=(x,d=1)=>(x*100).toFixed(d)+'%';
+
+// day index 0..364 -> "M월 D일"
+function dayName(k){let m=0;while(k>=MD[m]){k-=MD[m];m++;}return (m+1)+'월 '+(k+1)+'일';}
+function toIndex(m,d){let k=0;for(let i=0;i<m-1;i++)k+=MD[i];return k+d-1;}
+
+function drawCal(el,counts){
+  el.innerHTML='';let k=0;
+  for(let m=0;m<12;m++){
+    const box=document.createElement('div');box.className='mon';
+    box.innerHTML='<h4>'+(m+1)+'월</h4>';
+    const g=document.createElement('div');g.className='days';
+    for(let d=0;d<MD[m];d++,k++){
+      const c=document.createElement('div');c.className='d'+(counts[k]>=2?' dup':counts[k]===1?' one':'');
+      c.textContent=d+1;if(counts[k])c.title=counts[k]+'명';g.appendChild(c);
+    }
+    box.appendChild(g);el.appendChild(box);
+  }
+}
+function report(counts,msgEl,listEl,n){
+  const dups=[];let pairs=0;
+  counts.forEach((c,k)=>{if(c>=2){dups.push(dayName(k)+(c>2?' ('+c+'명)':''));pairs+=c*(c-1)/2;}});
+  if(dups.length){msgEl.className='msg hit';msgEl.textContent='✔ 같은 생일 있음 — '+dups.length+'개 날짜, '+pairs+'쌍 (이론상 '+n+'명이면 '+pct(pAny(n))+')';}
+  else{msgEl.className='msg miss';msgEl.textContent='✘ 같은 생일 없음 (이론상 '+n+'명이면 '+pct(pAny(n))+')';}
+  listEl.textContent=dups.length?'겹친 날: '+dups.join(', '):'';
+}
+
+// 실험 1
+const n1=$('n1');n1.oninput=()=>$('n1v').textContent=n1.value+'명';
+function makeClass(n){const c=new Array(365).fill(0);for(let i=0;i<n;i++)c[Math.floor(Math.random()*365)]++;return c;}
+$('btnClass').onclick=()=>{const n=+n1.value,c=makeClass(n);drawCal($('cal'),c);report(c,$('classMsg'),$('classList'),n);};
+$('btnClass10').onclick=()=>{
+  const n=+n1.value;let hit=0,last;
+  for(let i=0;i<10;i++){last=makeClass(n);if(last.some(x=>x>=2))hit++;}
+  drawCal($('cal'),last);
+  $('classMsg').className='msg';$('classMsg').textContent='10반 중 '+hit+'반에서 같은 생일 쌍이 나왔다 (이론상 약 '+(pAny(n)*10).toFixed(1)+'반). 달력은 마지막 반.';
+  $('classList').textContent='';
+};
+
+// 실험 2
+const n2=$('n2');let tot=0,hit=0,hist=[];
+function hasDup(n){if(n>365)return true;const s=new Uint8Array(365);for(let i=0;i<n;i++){const k=Math.floor(Math.random()*365);if(s[k])return true;s[k]=1;}return false;}
+function updStats(){
+  const n=+n2.value;$('sTotal').textContent=tot.toLocaleString();$('sHit').textContent=hit.toLocaleString();
+  $('sExp').textContent=tot?pct(hit/tot):'–';$('sTh').textContent=pct(pAny(n));drawConv();
+}
+function resetSim(){tot=0;hit=0;hist=[];updStats();}
+n2.oninput=()=>{$('n2v').textContent=n2.value+'명';resetSim();};
+$('btnReset').onclick=resetSim;
+$('btnRun').onclick=()=>{
+  const n=+n2.value,r=+$('reps').value;const step=Math.max(1,Math.floor(r/300));
+  for(let i=0;i<r;i++){tot++;if(hasDup(n))hit++;if(i%step===0||i===r-1)hist.push([tot,hit/tot]);}
+  updStats();
+};
+function axes(ctx,W,H,L,B,xmax,xlab,logx){
+  ctx.clearRect(0,0,W,H);ctx.font='12px Malgun Gothic, sans-serif';ctx.fillStyle='#48597e';ctx.strokeStyle='#dfe7f5';ctx.lineWidth=1;
+  for(let p=0;p<=100;p+=25){const y=H-B-(H-B-14)*p/100;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-10,y);ctx.stroke();ctx.fillText(p+'%',4,y+4);}
+  ctx.strokeStyle='#1d2b4a';ctx.beginPath();ctx.moveTo(L,14);ctx.lineTo(L,H-B);ctx.lineTo(W-10,H-B);ctx.stroke();
+  ctx.fillText(xlab,W-10-ctx.measureText(xlab).width,H-4);
+}
+function drawConv(){
+  const cv=$('conv'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height,L=40,B=24;
+  axes(ctx,W,H,L,B,0,'누적 반 수 (로그 눈금)');
+  const th=pAny(+n2.value),yOf=p=>H-B-(H-B-14)*p;
+  ctx.strokeStyle='#e85d2c';ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(L,yOf(th));ctx.lineTo(W-10,yOf(th));ctx.stroke();ctx.setLineDash([]);
+  if(!hist.length)return;
+  const maxX=Math.log10(Math.max(10,tot)),xOf=t=>L+(W-10-L)*Math.log10(t)/maxX;
+  ctx.fillStyle='#48597e';[1,10,100,1000,10000,100000].forEach(t=>{if(t<=Math.max(10,tot)){const x=xOf(t);ctx.fillText(t.toLocaleString(),x-8,H-B+14);}});
+  ctx.strokeStyle='#1f9d76';ctx.lineWidth=2;ctx.beginPath();
+  hist.forEach(([t,p],i)=>{const x=xOf(t),y=yOf(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();ctx.lineWidth=1;
+}
+
+// 그래프
+const curve=$('curve');
+function drawCurve(hx){
+  const ctx=curve.getContext('2d'),W=curve.width,H=curve.height,L=40,B=24,N=260;
+  axes(ctx,W,H,L,B,N,'인원(명)');
+  const xOf=n=>L+(W-10-L)*n/N,yOf=p=>H-B-(H-B-14)*p;
+  ctx.fillStyle='#48597e';for(let n=0;n<=N;n+=20)ctx.fillText(n,xOf(n)-6,H-B+14);
+  ctx.strokeStyle='#ff7a4d';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(L,yOf(.5));ctx.lineTo(W-10,yOf(.5));ctx.stroke();ctx.setLineDash([]);
+  [[pAny,'#e85d2c'],[pMe,'#6b7fd7']].forEach(([f,c])=>{ctx.strokeStyle=c;ctx.lineWidth=2.4;ctx.beginPath();for(let n=1;n<=N;n++){const x=xOf(n),y=yOf(f(n));n>1?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();});
+  ctx.lineWidth=1;
+  [[23,pAny,'#e85d2c'],[254,pMe,'#6b7fd7']].forEach(([n,f,c])=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(xOf(n),yOf(f(n)),5,0,7);ctx.fill();ctx.fillText(n+'명',xOf(n)+(n>200?-44:7),yOf(f(n))+(n>200?-8:16));});
+  if(hx){ctx.strokeStyle='#1d2b4a';ctx.beginPath();ctx.moveTo(xOf(hx),14);ctx.lineTo(xOf(hx),H-B);ctx.stroke();}
+}
+function hover(e){
+  const r=curve.getBoundingClientRect(),cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const x=cx*curve.width/r.width;let n=Math.round((x-40)*260/(curve.width-50));n=Math.min(260,Math.max(1,n));
+  drawCurve(n);$('curveMsg').innerHTML=n+'명 → 아무나 둘 <span style="color:#e85d2c">'+pct(pAny(n),2)+'</span> · 나와 같은 생일 <span style="color:#6b7fd7">'+pct(pMe(n),2)+'</span>';
+}
+curve.addEventListener('mousemove',hover);curve.addEventListener('touchmove',e=>{hover(e);e.preventDefault();},{passive:false});
+drawCurve();
+
+// 이론값 표
+(function(){
+  const rows=[2,3,5,10,15,20,22,23,25,30,35,40,50,57,60,70,100];
+  let h='<tr><th>인원</th><th>아무나 둘이 같은 생일</th><th>나와 같은 생일</th></tr>';
+  rows.forEach(n=>{h+='<tr'+(n===23?' class="mark"':'')+'><td>'+n+'명</td><td>'+pct(pAny(n))+'</td><td>'+pct(pMe(n))+'</td></tr>';});
+  h+='<tr class="mark"><td>254명</td><td>'+pct(pAny(254))+'</td><td>'+pct(pMe(254),2)+'</td></tr>';
+  $('thTable').innerHTML=h;
+})();
+
+// 우리 반
+$('btnOurs').onclick=()=>{
+  const toks=$('ours').value.split(/[\s,;]+/).filter(Boolean);const c=new Array(365).fill(0);const bad=[];let n=0;
+  toks.forEach(t=>{const m=t.match(/^(\d{1,2})\s*[-\/.월]\s*(\d{1,2})일?$/);
+    if(!m){bad.push(t);return;}const mo=+m[1],d=+m[2];
+    if(mo<1||mo>12||d<1||d>MD[mo-1]){bad.push(t);return;}c[toIndex(mo,d)]++;n++;});
+  if(!n){$('oursMsg').className='msg miss';$('oursMsg').textContent='읽을 수 있는 생일이 없다. 예) 3-14, 7/2';$('oursList').textContent='';$('calOurs').innerHTML='';return;}
+  drawCal($('calOurs'),c);report(c,$('oursMsg'),$('oursList'),n);
+  $('oursMsg').textContent=n+'명 입력 · '+$('oursMsg').textContent;
+  if(bad.length)$('oursList').textContent+=(($('oursList').textContent)?' / ':'')+'읽지 못한 값: '+bad.join(', ')+' (2월 29일은 전제에서 제외)';
+};
+
+updStats();
+</script>
+</body>
+</html>
